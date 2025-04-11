@@ -123,9 +123,82 @@ Takes a `RegionCondition` and returns the tons of CO₂-equivalent **emitted per
 
 ### 🔹 Subtask 3.2: `area(gr)`
 
-Takes a `GlobeRect` and returns the estimated **area in square kilometers**.  
-Ignore Earth's curvature — treat the region as a flat rectangle.  
-Each degree of latitude and longitude ≈ 111 km.
+Takes a `GlobeRect` and returns the estimated **surface area of the region in square kilometers**.
+
+#### ✅ Use a spherical Earth model
+
+Instead of treating the region as a flat rectangle, you'll model the Earth's curvature using the following formula:
+
+```
+A = R² × |λ₂ - λ₁| × |sin(φ₂) - sin(φ₁)|
+```
+
+Where:
+- `R` is the Earth's radius (use `6378.1` kilometers)
+- `λ₁`, `λ₂` are the longitudes in **radians**
+- `φ₁`, `φ₂` are the latitudes in **radians**
+
+This formula calculates the **area of a latitude-longitude band** on the surface of a sphere. It works even if:
+- The region crosses the 180° longitude line
+- The region is near the poles
+- The region is very narrow
+
+> ✅ **Hint**: use `math.radians()` to convert degrees to radians, and `math.sin()` to get the sine of an angle.
+
+Great catch — let’s make sure students understand **why** this piece is there and **how** to implement it correctly.
+
+Here’s an updated version of the explanation with that logic included, written for clarity and accuracy in your README:
+
+---
+
+### 🔹 Subtask 3.2: `area(gr)`
+
+Takes a `GlobeRect` and returns the estimated **surface area of the region in square kilometers**.
+
+#### ✅ Use a spherical Earth model
+
+Instead of treating the region as a flat rectangle, use the formula for computing the area of a region on a **sphere**:
+
+\[
+A = R^2 \cdot |\lambda_2 - \lambda_1| \cdot |\sin(\phi_2) - \sin(\phi_1)|
+\]
+
+Where:
+- `R = 6378.1` (Earth’s radius in kilometers)
+- `λ₁`, `λ₂` = west and east longitude (in **radians**)
+- `φ₁`, `φ₂` = low and high latitude (in **radians**)
+
+This correctly accounts for:
+- The curvature of the Earth
+- Distortions near the poles
+- The narrowing of longitude bands at high latitudes
+
+---
+
+#### 🌍 Handling longitude wraparound (crossing the 180° line)
+
+If your rectangle crosses from one side of the Earth to the other (e.g. west_long = 170°, east_long = -170°), the longitude difference would be negative unless corrected.
+
+Normally, to find how wide a region is in longitude, you subtract the west longitude from the east longitude:
+
+\[
+\Delta \lambda = \text{east\_long} - \text{west\_long}
+\]
+
+This works most of the time.
+
+But if your region crosses the 180° line — the line where longitude jumps from +180° back to -180° — then the subtraction gives you a **negative number**, even though the region does exist and has width.
+
+For example:
+
+- A region goes from 170° east to -170° (which is the same as 190° east if you went around the Earth).
+- Subtracting: \(-170^\circ - 170^\circ = -340^\circ\), which doesn’t make sense for width.
+
+So we fix it:  
+If the result is negative, it means we wrapped around the back side of the globe.  
+We add a full circle (360° or \(2\pi\) radians) to turn that negative into the correct positive value.
+
+This adjustment makes sure the computed width always represents the **shortest, correct path going east**, even across the date line.
 
 ---
 
